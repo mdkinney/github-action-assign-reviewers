@@ -17,5 +17,7 @@ runs:
         cache-dependency-path: 'pip-requirements.txt'
     - name: Install Dependencies
       run: pip install -r pip-requirements.txt
+      shell: bash
     - name: Assign Reviewers from .github/REVIEWERS
       run: python src/AssignReviewers.py
+      shell: bash
