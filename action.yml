@@ -7,6 +7,11 @@
 
 name: 'Assign Reviewers'
 description: Assign reviewers from .github/REVIEWERS using CODEOWNERS syntax
+inputs:
+  token:
+    description: TOKEN
+    required: true
+    default: ''
 runs:
   using: 'composite'
   steps:

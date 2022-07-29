@@ -11,9 +11,9 @@ from   codeowners import CodeOwners
 from   git        import Git
 from   github     import Github
 
-GitHubPayload = json.loads(os.environ.get('GITHUB_CONTEXT'))
-Hub = Github (GitHubPayload['token'])
+GitHubEventPayload = json.load(open(os.environ.get('GITHUB_EVENT_PATH')))
+Hub = Github (os.environ.get ('INPUT_TOKEN'))
 print (Hub)
-print (GitHubPayload['event']['action'])
+print (GitHubEventPayload['action'])
 print (os.environ.get('GITHUB_RUN_ID'))
 print (os.environ.get('GITHUB_RUN_NUMBER'))
