@@ -24,13 +24,9 @@ runs:
   steps:
     - name: Install Python
       uses: actions/setup-python@v4
-      with:
-        cache: pip
-        cache-dependency-path: './pip-requirements.txt'
     - name: Install Python Dependencies
       run: pip install -r ./pip-requirements.txt
       shell: bash
     - name: Assign Reviewers from .github/REVIEWERS
       run: python src/AssignReviewers.py
-      post-if: ${{ false }}
       shell: bash
