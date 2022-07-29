@@ -1,0 +1,21 @@
+## @file
+# Assign reviewers from .github/REVIEWERS using CODEOWNERS syntax
+#
+# Copyright (c) 2022, Intel Corporation. All rights reserved.<BR>
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+name: Assign reviewers from .github/REVIEWERS using CODEOWNERS syntax
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Python
+      uses: actions/setup-python@v4
+      with:
+        cache: 'pip'
+        cache-dependency-path: 'pip-requirements.txt'
+    - name: Install Dependencies
+      run: pip install -r pip-requirements.txt
+    - name: Assign Reviewers from .github/REVIEWERS
+      run: python src/AssignReviewers.py

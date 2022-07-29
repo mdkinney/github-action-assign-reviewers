@@ -1,0 +1,32 @@
+## @file
+# Assign reviewers from .github/REVIEWERS using CODEOWNERS syntax
+#
+# Copyright (c) 2022, Intel Corporation. All rights reserved.<BR>
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+name: Assign reviewers from .github/REVIEWERS using CODEOWNERS syntax
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - 'main'
+      - 'stable/**'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  assign_reviewers:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: ./
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
