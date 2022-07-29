@@ -6,7 +6,6 @@
 ##
 
 import os
-import sys
 import json
 from   codeowners import CodeOwners
 from   git        import Git
@@ -18,4 +17,3 @@ print (Hub)
 print (GitHubEventPayload['action'])
 print (os.environ.get('GITHUB_RUN_ID'))
 print (os.environ.get('GITHUB_RUN_NUMBER'))
-sys.exit()
