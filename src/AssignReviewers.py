@@ -11,10 +11,17 @@ from   codeowners import CodeOwners
 from   git        import Git
 from   github     import Github
 
+REVIEWERS_PATHS = ['./REVIEWERS', './docs/REVIEWERS', './.github/REVIEWERS']
+
 GitHubEventPayload = json.load(open(os.environ.get('GITHUB_EVENT_PATH')))
 Hub = Github (os.environ.get ('INPUT_TOKEN'))
+ReviewersPaths = [os.environ.get ('INPUT_REVIEWERS_PATH')] + REVIEWERS_PATHS
+ReviewersPath = ''
+for Path in ReviewersPaths:
+    if Path and os.path.exists(Path):
+        ReviewersPath = Path
 print (Hub)
 print (GitHubEventPayload['action'])
 print (os.environ.get('GITHUB_RUN_ID'))
 print (os.environ.get('GITHUB_RUN_NUMBER'))
-print (f"{}")
+print ('ReviewersPath:', ReviewersPath)

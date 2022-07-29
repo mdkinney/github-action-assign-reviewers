@@ -9,18 +9,19 @@ name: 'Assign Reviewers'
 description: Assign reviewers from .github/REVIEWERS using CODEOWNERS syntax
 inputs:
   token:
-    description: TOKEN
+    description: token used to update PR requested reviewers
     required: true
+    default: ''
+  reviewers_path:
+    description: path to REVIEWERS files if not in default locations.
+    required: false
     default: ''
 runs:
   using: 'composite'
   steps:
     - name: Install Python
       uses: actions/setup-python@v4
-      with:
-        cache: 'pip'
-        cache-dependency-path: 'pip-requirements.txt'
-    - name: Install Dependencies
+    - name: Install Python Dependencies
       run: pip install -r pip-requirements.txt
       shell: bash
     - name: Assign Reviewers from .github/REVIEWERS
