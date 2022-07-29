@@ -26,6 +26,3 @@ runs:
     - name: Assign Reviewers from .github/REVIEWERS
       run: python src/AssignReviewers.py
       shell: bash
-    - name: Done
-      run: echo Done
-      shell: bash
