@@ -12,7 +12,7 @@ from   git        import Git
 from   github     import Github
 
 GitHubToken   = os.environ.get('INPUT_GITHUB_TOKEN')
-GitHubPayload = json.loads(os.environ.get('INPUT_GITHUB'))
+GitHubPayload = json.loads(os.environ.get('GITHUB_CONTEXT'))
 
 Hub = Github (GitHubToken)
 print (Hub)

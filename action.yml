@@ -5,8 +5,13 @@
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 ##
 
-name: Assign reviewers from .github/REVIEWERS using CODEOWNERS syntax
-
+name: 'Assign Reviewers'
+description: Assign reviewers from .github/REVIEWERS using CODEOWNERS syntax
+inputs:
+  github_token:
+    description: GITHUB_TOKEN
+    required: true
+    default: ''
 runs:
   using: 'composite'
   steps:
