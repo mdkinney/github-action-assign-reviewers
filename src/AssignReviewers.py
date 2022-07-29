@@ -16,4 +16,12 @@ GitHubPayload = json.loads(os.environ.get('GITHUB_CONTEXT'))
 
 Hub = Github (GitHubToken)
 print (Hub)
+
+Hub = Github (GitHubPayload['token'])
+print (Hub)
+
+print (GitHubPayload['event']['action'])
+
 print (GitHubPayload)
+
+print (GitHubPayload['event']['action'])
