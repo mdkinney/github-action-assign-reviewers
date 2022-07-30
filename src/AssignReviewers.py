@@ -239,6 +239,7 @@ if __name__ == '__main__':
             Request.HubPullRequest.add_to_assignees([Author])
             print (f"Assignee added: {Author}")
         except:
+            raise
             sys.exit(f"ERROR: Unable to add new assignee {Author}")
 
     # The PR author can never be a PR reviewer
