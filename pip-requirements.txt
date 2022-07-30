@@ -15,3 +15,4 @@
 codeowners==0.5.0
 GitPython==3.1.14
 PyGithub==1.55
+cached-property==1.5.2

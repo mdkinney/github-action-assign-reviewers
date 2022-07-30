@@ -1,5 +1,5 @@
 ## @file
-# Assign reviewers from .github/REVIEWERS using CODEOWNERS syntax
+# Assign reviewers from a REVIEWERS file using CODEOWNERS syntax
 #
 # Copyright (c) 2022, Intel Corporation. All rights reserved.<BR>
 # SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -7,15 +7,15 @@
 
 name: 'Assign Reviewers'
 
-description: Assign reviewers from .github/REVIEWERS using CODEOWNERS syntax
+description: Assign reviewers from a REVIEWERS file using CODEOWNERS syntax
 
 inputs:
   token:
-    description: token used to update PR requested reviewers
+    description: token used to update PR reviewers
     required: true
     default: ''
   reviewers_path:
-    description: path to REVIEWERS files if not in default locations.
+    description: path to REVIEWERS file if not in supported default locations.
     required: false
     default: ''
 
