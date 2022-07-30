@@ -24,11 +24,15 @@ class AssignReviewers (object):
         self._EmailToLogin       = {}
         self._InputToken         = os.environ.get('INPUT_TOKEN')
         self._EventPath          = os.environ.get('GITHUB_EVENT_PATH')
+        self._EventName          = os.environ.get('GITHUB_EVENT_NAME')
         self._InputReviewersPath = os.environ.get('INPUT_REVIEWERS_PATH')
         self._repo               = None
 
     @cached_property
     def EventContext (self):
+        # Verify that the event is a pull request
+        if self._EventName not in ['pull_request', 'pull_request_target']:
+            sys.exit(f"ERROR: Event({self._EventName}) must be 'pull_request' and 'pull_request_target'.")
         # Parse JSON file that contains the GitHub PR event context
         print(f"Parse JSON file GITHUB_EVENT_PATH:{self._EventPath}")
         try:
@@ -37,7 +41,7 @@ class AssignReviewers (object):
             sys.exit(f"ERROR: Unable to parse JSON file GITHUB_EVENT_PATH:{self._EventPath}")
 
         # Verify that all the JSON fields required to complete this action are present
-        for Key in ['repository', 'pull_request']:
+        for Key in ['action', 'repository', 'pull_request']:
             if Key not in self._EventContext:
                 sys.exit(f"ERROR: Event context does not contain '{Key}'")
         for Key in ['full_name']:
@@ -82,7 +86,7 @@ class AssignReviewers (object):
 
     @cached_property
     def Hub(self):
-        # Use GitHub API to retreieve a Hub object using the input token
+        # Use GitHub API to retrieve a Hub object using the input token
         print(f"Get Hub object using input token")
         try:
             self._Hub = Github (self._InputToken)
@@ -127,7 +131,7 @@ class AssignReviewers (object):
         return [Override, f'./{BaseName}', f'./docs/{BaseName}', f'./.github/{BaseName}']
 
     def _ParseCodeOwners (self, reference, paths):
-        # Search prioritized list of paths for a CODEOWNERS sytnax file and parse the first file found
+        # Search prioritized list of paths for a CODEOWNERS syntax file and parse the first file found
         for file in paths:
             if file:
                 print(f"Attempt to parse file {self.Repo.remote().name}/{reference}:{file}")
@@ -249,7 +253,7 @@ if __name__ == '__main__':
     # but are not required based on the set of files modified.
     # Remove users and teams that are CODEOWNERS.  GitHub removes CODEOWNERS.
     #
-    # NOTE: If extra reviewers are manully added to a PR that are not required based
+    # NOTE: If extra reviewers are manually added to a PR that are not required based
     #       on the files modified by the PR, then these extra reviewers will be removed.
     RemoveUserReviewers = (CurrentUserReviewers - UserReviewers) - UserCodeOwners
     RemoveTeamReviewers = (CurrentTeamReviewers - TeamReviewers) - TeamCodeOwners
