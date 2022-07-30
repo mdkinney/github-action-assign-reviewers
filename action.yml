@@ -29,4 +29,7 @@ runs:
       shell: bash
     - name: Assign Reviewers from .github/REVIEWERS
       run: python src/AssignReviewers.py
+      env:
+        INPUT_TOKEN: ${{ inputs.token }}
+        INPUT_REVIEWERS_PATH: ${{ inputs.reviewers_path }}
       shell: bash
