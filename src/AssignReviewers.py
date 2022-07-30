@@ -236,7 +236,7 @@ if __name__ == '__main__':
     if Author not in CurrentAssignees:
         print (f"Add Assignee: {Author}")
         try:
-            Request.HubPullRequest.add_to_assignees([Author])
+            Request.HubPullRequest.add_to_assignees(Author)
             print (f"Assignee added: {Author}")
         except:
             raise
