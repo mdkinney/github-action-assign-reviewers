@@ -95,6 +95,7 @@ class AssignReviewers (object):
             self._Hub = Github (self._InputToken)
         except:
             sys.exit(f"ERROR: Unable to retrieve Hub object")
+        print(self._Hub)
         return self._Hub
 
     @cached_property
@@ -105,6 +106,7 @@ class AssignReviewers (object):
             self._HubPullRequest = self.Hub.get_repo(self.EventRepository['full_name']).get_pull(self.EventPullRequest['number'])
         except:
             sys.exit(f"ERROR: Unable to retrieve PullRequest object")
+        print(self._HubPullRequest)
         return self._HubPullRequest
 
     def CreateRepo(self, path, remote, url):
@@ -235,6 +237,7 @@ if __name__ == '__main__':
         print (f"Add Assignee: {Author}")
         try:
             Request.HubPullRequest.add_to_assignees([Author])
+            print (f"Assignee added: {Author}")
         except:
             sys.exit(f"ERROR: Unable to add new assignee {Author}")
 
