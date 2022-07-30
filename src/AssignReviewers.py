@@ -47,9 +47,12 @@ class AssignReviewers (object):
         for Key in ['full_name']:
             if Key not in self._EventContext['repository']:
                 sys.exit(f"ERROR: Event repository context does not contain '{Key}'")
-        for Key in ['commits', 'base', 'head', 'number', 'user', 'assignees', 'requested_reviewers', 'requested_teams']:
+        for Key in ['draft', 'commits', 'base', 'head', 'number', 'user', 'assignees', 'requested_reviewers', 'requested_teams']:
             if Key not in self._EventContext['pull_request']:
                 sys.exit(f"ERROR: Event pull request context does not contain '{Key}'")
+        if self._EventContext['pull_request']['draft']:
+            # Exit with success if PR is a draft and do not assign reviewers
+            sys.exit(0)
         for Key in ['repo', 'ref']:
             if Key not in self._EventContext['pull_request']['base']:
                 sys.exit(f"ERROR: Event pull request base context does not contain '{Key}'")
