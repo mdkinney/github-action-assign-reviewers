@@ -95,7 +95,6 @@ class AssignReviewers (object):
             self._Hub = Github (self._InputToken)
         except:
             sys.exit(f"ERROR: Unable to retrieve Hub object")
-        print(self._Hub)
         return self._Hub
 
     @cached_property
@@ -106,7 +105,6 @@ class AssignReviewers (object):
             self._HubPullRequest = self.Hub.get_repo(self.EventRepository['full_name']).get_pull(self.EventPullRequest['number'])
         except:
             sys.exit(f"ERROR: Unable to retrieve PullRequest object")
-        print(self._HubPullRequest)
         return self._HubPullRequest
 
     def CreateRepo(self, path, remote, url):
@@ -237,9 +235,7 @@ if __name__ == '__main__':
         print (f"Add Assignee: {Author}")
         try:
             Request.HubPullRequest.add_to_assignees(Author)
-            print (f"Assignee added: {Author}")
         except:
-            raise
             sys.exit(f"ERROR: Unable to add new assignee {Author}")
 
     # The PR author can never be a PR reviewer
@@ -268,9 +264,15 @@ if __name__ == '__main__':
     # If any users or teams need to be added to the set of PR reviewers, then use GitHub API to add them
     if AddUserReviewers or AddTeamReviewers:
         print (f"Add Reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
-        Request.HubPullRequest.create_review_request(list(AddUserReviewers), list(AddTeamReviewers))
+        try:
+            Request.HubPullRequest.create_review_request(list(AddUserReviewers), list(AddTeamReviewers))
+        except:
+            sys.exit(f"ERROR: Unable to add reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
 
     # If any users or teams need to be removed from the set of PR reviewers, then use GitHub API to remove them
     if RemoveUserReviewers or RemoveTeamReviewers:
         print (f"Remove Reviewers User: {RemoveUserReviewers} Team: {RemoveTeamReviewers}")
-        Request.HubPullRequest.delete_review_request(list(RemoveUserReviewers), list(RemoveTeamReviewers))
+        try:
+            Request.HubPullRequest.delete_review_request(list(RemoveUserReviewers), list(RemoveTeamReviewers))
+        except:
+            sys.exit(f"ERROR: Unable to remove reviewers User: {RemoveUserReviewers} Team: {RemoveTeamReviewers}")
