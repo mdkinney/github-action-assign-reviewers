@@ -20,6 +20,18 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - uses: mdkinney/github-action-assign-reviewers@main
+      - name: Checkout Pull Request
+        uses: actions/checkout@v2
+      - run: |
+          ls -al
+          git status
+      - name: Assign Reviewers
+        uses: mdkinney/github-action-assign-reviewers@main
         with:
           token: ${{secrets.GITHUB_TOKEN}}
+      - run: |
+          ls -al
+          git status
+          cd AssignReviewersRepo
+          ls -al
+          git status
