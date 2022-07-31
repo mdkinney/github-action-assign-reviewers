@@ -22,18 +22,10 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Checkout Assign Reviewers Repository
-      uses: actions/checkout@v2
-      with:
-        repository: mdkinney/github-action-assign-reviewers
-        ref: main
-        path: ./AssignReviewersRepo
     - name: Install Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-        cache: 'pip'
-        cache-dependency-path: '${{ github.action_path }}/pip-requirements.txt'
     - name: Install Python Dependencies
       run: pip install -r ${{ github.action_path }}/pip-requirements.txt
       shell: bash
