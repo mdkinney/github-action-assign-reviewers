@@ -204,6 +204,8 @@ if __name__ == '__main__':
     # Initialize AssignReviewers object
     Request = AssignReviewers()
 
+    print (f"GITHUB_ACTION_PATH: {os.environ.get('GITHUB_ACTION_PATH')}")
+
     # Create repository in localrepo directory and add remote to PR BASE with name origin
 #    Request.CreateRepo ('localrepo', 'origin', Request.EventBase['repo']['html_url'])
     Request.Repo = Git('..')
