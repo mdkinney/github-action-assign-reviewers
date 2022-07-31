@@ -26,7 +26,16 @@ runs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
+    - name: Cache Python Dependencies
+      id: cache-python-dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('${{ github.action_path }}/pip-requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
     - name: Install Python Dependencies
+      if: steps.cache-python-dependencies.outputs.cache-hit != 'true'
       run: pip install -r ${{ github.action_path }}/pip-requirements.txt
       shell: bash
     - name: Assign Reviewers from REVIEWERS file
