@@ -26,7 +26,6 @@ runs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-        cache: 'pip'
     - name: Install Python Dependencies
       run: pip install -r ${{ github.action_path }}/pip-requirements.txt
       shell: bash

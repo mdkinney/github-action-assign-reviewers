@@ -20,11 +20,7 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - name: export
-        run: |
-          pwd
-          export
-      - name: Checkout Pull Request
+      - name: Checkout Pull Request Target
         uses: actions/checkout@v2
       - name: Assign Reviewers
         uses: mdkinney/github-action-assign-reviewers@main
