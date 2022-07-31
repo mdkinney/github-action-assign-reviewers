@@ -25,6 +25,8 @@ runs:
     - name: Checkout Assign Reviewers Repository
       uses: actions/checkout@v2
       with:
+        repository: mdkinney/github-action-assign-reviewers
+        ref: main
         path: ./AssignReviewersRepo
     - name: Install Python
       uses: actions/setup-python@v4

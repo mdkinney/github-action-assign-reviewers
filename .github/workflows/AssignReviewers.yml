@@ -18,7 +18,6 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./
+      - uses: mdkinney/github-action-assign-reviewers@main
         with:
           token: ${{secrets.GITHUB_TOKEN}}
