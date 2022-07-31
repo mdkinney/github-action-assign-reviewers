@@ -30,11 +30,13 @@ runs:
         path: ./AssignReviewersRepo
     - name: Install Python
       uses: actions/setup-python@v4
+      with:
+        cache: 'pip'
     - name: Install Python Dependencies
       working-directory: ./AssignReviewersRepo
       run: pip install -r ./pip-requirements.txt
       shell: bash
-    - name: Assign Reviewers from .github/REVIEWERS
+    - name: Assign Reviewers from REVIEWERS file
       working-directory: ./AssignReviewersRepo
       run: python src/AssignReviewers.py
       env:
