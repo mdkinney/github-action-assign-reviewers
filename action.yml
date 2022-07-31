@@ -31,6 +31,7 @@ runs:
     - name: Install Python
       uses: actions/setup-python@v4
       with:
+        python-version: '3.x'
         cache: 'pip'
     - name: Install Python Dependencies
       working-directory: ./AssignReviewersRepo
