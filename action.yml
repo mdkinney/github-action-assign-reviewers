@@ -33,6 +33,7 @@ runs:
       with:
         python-version: '3.x'
         cache: 'pip'
+        cache-dependency-path: './AssignReviewersRepo/pip-requirements.txt'
     - name: Install Python Dependencies
       working-directory: ./AssignReviewersRepo
       run: pip install -r ./pip-requirements.txt
