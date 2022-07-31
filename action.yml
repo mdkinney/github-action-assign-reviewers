@@ -33,14 +33,12 @@ runs:
       with:
         python-version: '3.x'
         cache: 'pip'
-        cache-dependency-path: './AssignReviewersRepo/pip-requirements.txt'
+        cache-dependency-path: '$GITHUB_ACTION_PATH/pip-requirements.txt'
     - name: Install Python Dependencies
-      working-directory: ./AssignReviewersRepo
-      run: pip install -r ./pip-requirements.txt
+      run: pip install -r $GITHUB_ACTION_PATH/pip-requirements.txt
       shell: bash
     - name: Assign Reviewers from REVIEWERS file
-      working-directory: ./AssignReviewersRepo
-      run: python src/AssignReviewers.py
+      run: python $GITHUB_ACTION_PATH/src/AssignReviewers.py
       env:
         INPUT_TOKEN: ${{ inputs.token }}
         INPUT_REVIEWERS_PATH: ${{ inputs.reviewers_path }}
