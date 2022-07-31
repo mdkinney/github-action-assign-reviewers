@@ -22,12 +22,17 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Checkout Assign Reviewers Repository
+      uses: actions/checkout@v2
+      with:
+        path: ./AssignReviewersRepo
     - name: Install Python
       uses: actions/setup-python@v4
     - name: Install Python Dependencies
       run: pip install -r ./pip-requirements.txt
       shell: bash
     - name: Assign Reviewers from .github/REVIEWERS
+      working-directory: ./AssignReviewersRepo
       run: python src/AssignReviewers.py
       env:
         INPUT_TOKEN: ${{ inputs.token }}
