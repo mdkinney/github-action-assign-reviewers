@@ -13,7 +13,7 @@ import sys
 import json
 from   cached_property import cached_property
 from   codeowners      import CodeOwners
-from   git             import Repo
+from   git             import Repo, Git
 from   github          import Github
 
 class AssignReviewers (object):
@@ -125,7 +125,8 @@ class AssignReviewers (object):
         # Use git diff to determine the set of files modified by a set of commits
         print(f"Get files modified by commits in range {sha}~{commits}..{sha}")
         try:
-            return self.Repo.git.diff(f"{sha}~{commits}..{sha}", '--name-only').split()
+#            return self.Repo.git.diff(f"{sha}~{commits}..{sha}", '--name-only').split()
+            return self.Repo.diff(f"{sha}~{commits}..{sha}", '--name-only').split()
         except:
             sys.exit(f"ERROR: Unable to determine files modified in range {sha}~{commits}..{sha}")
 
@@ -137,10 +138,13 @@ class AssignReviewers (object):
         # Search prioritized list of paths for a CODEOWNERS syntax file and parse the first file found
         for file in paths:
             if file:
-                print(f"Attempt to parse file {self.Repo.remote().name}/{reference}:{file}")
+#                print(f"Attempt to parse file {self.Repo.remote().name}/{reference}:{file}")
+                print(f"Attempt to parse file {self.Repo.remote()}/{reference}:{file}")
                 try:
-                    Result = CodeOwners(self.Repo.git.show(f"{self.Repo.remote().name}/{reference}:{file}"))
-                    print(f"Found file {self.Repo.remote().name}/{reference}:{file}")
+#                    Result = CodeOwners(self.Repo.git.show(f"{self.Repo.remote().name}/{reference}:{file}"))
+                    Result = CodeOwners(self.Repo.show(f"{self.Repo.remote()}/{reference}:{file}"))
+#                    print(f"Found file {self.Repo.remote().name}/{reference}:{file}")
+                    print(f"Found file {self.Repo.remote()}/{reference}:{file}")
                     return Result
                 except:
                     continue
@@ -201,21 +205,23 @@ if __name__ == '__main__':
     Request = AssignReviewers()
 
     # Create repository in localrepo directory and add remote to PR BASE with name origin
-    Request.CreateRepo ('localrepo', 'origin', Request.EventBase['repo']['html_url'])
+#    Request.CreateRepo ('localrepo', 'origin', Request.EventBase['repo']['html_url'])
+    Request.Repo = Git('..')
 
     # Fetch PR BASE with depth 1
     # This is required to read the CODEOWNERS and REVIEWERS files
-    try:
-        Request.Repo.remote().fetch(Request.EventBase['ref'], depth = 1)
-    except:
-        sys.exit(f"ERROR: Unable to fetch {Request.EventBase['ref']} with depth 1")
+#    try:
+#        Request.Repo.remote().fetch(Request.EventBase['ref'], depth = 1)
+#    except:
+#        sys.exit(f"ERROR: Unable to fetch {Request.EventBase['ref']} with depth 1")
 
     # Fetch the set of PR commits in head sha to determine files modified by the PR
     # The commits from head sha are only used to perform a git diff operation to determine
     # the set of files modified by the PR.  This is the only potential use of files from
     # a fork.
     try:
-        Request.Repo.remote().fetch(Request.EventHead['sha'], depth = Request.EventCommits + 1)
+        Request.Repo.fetch(Request.Repo.remote(), Request.EventHead['sha'], depth = Request.EventCommits + 1)
+#        Request.Repo.remote().fetch(Request.EventHead['sha'], depth = Request.EventCommits + 1)
     except:
         sys.exit(f"ERROR: Unable to fetch {Request.EventHead['sha']} with depth {Request.EventCommits + 1}")
 
