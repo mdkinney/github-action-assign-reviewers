@@ -31,7 +31,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles(github.action_path + '/pip-requirements.txt') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('$GITHUB_ACTION_PATH/pip-requirements.txt') }}
     - name: Install Python Dependencies
       if: steps.cache-python-dependencies.outputs.cache-hit != 'true'
       run: pip install -r ${{ github.action_path }}/pip-requirements.txt
