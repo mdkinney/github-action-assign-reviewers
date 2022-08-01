@@ -107,25 +107,15 @@ class AssignReviewers (object):
             sys.exit(f"ERROR: Unable to retrieve PullRequest object")
         return self._HubPullRequest
 
-    def CreateRepo(self, path, remote, url):
-        # Initialize a new git repository and add a remote to the specified url
-        try:
-            print(f"Create repository for {url} in {path}")
-            self._repo = Repo.init(path)
-            self._repo.create_remote(remote, url = url)
-        except:
-            sys.exit(f"ERROR: Unable to create repository for {url} in {path}")
-        return self._repo
-
     @cached_property
     def Repo(self):
+        self._repo = Git('.')
         return self._repo
 
     def GetModifiedFiles(self, sha, commits):
         # Use git diff to determine the set of files modified by a set of commits
         print(f"Get files modified by commits in range {sha}~{commits}..{sha}")
         try:
-#            return self.Repo.git.diff(f"{sha}~{commits}..{sha}", '--name-only').split()
             return self.Repo.diff(f"{sha}~{commits}..{sha}", '--name-only').split()
         except:
             sys.exit(f"ERROR: Unable to determine files modified in range {sha}~{commits}..{sha}")
@@ -134,34 +124,29 @@ class AssignReviewers (object):
         # Build prioritized list of file paths to search for a file with CODEOWNERS syntax
         return [Override, f'./{BaseName}', f'./docs/{BaseName}', f'./.github/{BaseName}']
 
-    def _ParseCodeOwners (self, reference, paths):
+    def _ParseCodeOwners (self, paths):
         # Search prioritized list of paths for a CODEOWNERS syntax file and parse the first file found
         for file in paths:
-            if file:
-#                print(f"Attempt to parse file {self.Repo.remote().name}/{reference}:{file}")
-                print(f"Attempt to parse file {self.Repo.remote()}/{reference}:{file}")
+            if file and os.path.exists(file):
+                print(f"Attempt to parse file {file}")
                 try:
-#                    Result = CodeOwners(self.Repo.git.show(f"{self.Repo.remote().name}/{reference}:{file}"))
-                    Result = CodeOwners(self.Repo.show(f"{self.Repo.remote()}/{reference}:{file}"))
-#                    print(f"Found file {self.Repo.remote().name}/{reference}:{file}")
-                    print(f"Found file {self.Repo.remote()}/{reference}:{file}")
+                    Result = CodeOwners(open(file).read())
+                    print(f"Found file {file}")
                     return Result
                 except:
                     continue
         # No files found in the prioritized list
         return None
 
-    def ParseCodeownersFile (self, reference):
+    def ParseCodeownersFile (self):
         # Parse first CODEOWNERS file found in prioritized list
         return self._ParseCodeOwners (
-                      reference,
                       self._CodeOwnerPaths('CODEOWNERS')
                       )
 
-    def ParseReviewersFile (self, reference):
+    def ParseReviewersFile (self):
         # Parse first REVIEWERS file found in prioritized list
         return self._ParseCodeOwners (
-                      reference,
                       self._CodeOwnerPaths('REVIEWERS', self._InputReviewersPath)
                       )
 
@@ -204,24 +189,12 @@ if __name__ == '__main__':
     # Initialize AssignReviewers object
     Request = AssignReviewers()
 
-    # Create repository in localrepo directory and add remote to PR BASE with name origin
-#    Request.CreateRepo ('localrepo', 'origin', Request.EventBase['repo']['html_url'])
-    Request.Repo = Git('.')
-
-    # Fetch PR BASE with depth 1
-    # This is required to read the CODEOWNERS and REVIEWERS files
-#    try:
-#        Request.Repo.remote().fetch(Request.EventBase['ref'], depth = 1)
-#    except:
-#        sys.exit(f"ERROR: Unable to fetch {Request.EventBase['ref']} with depth 1")
-
     # Fetch the set of PR commits in head sha to determine files modified by the PR
     # The commits from head sha are only used to perform a git diff operation to determine
     # the set of files modified by the PR.  This is the only potential use of files from
     # a fork.
     try:
         Request.Repo.fetch(Request.Repo.remote(), Request.EventHead['sha'], depth = Request.EventCommits + 1)
-#        Request.Repo.remote().fetch(Request.EventHead['sha'], depth = Request.EventCommits + 1)
     except:
         sys.exit(f"ERROR: Unable to fetch {Request.EventHead['sha']} with depth {Request.EventCommits + 1}")
 
@@ -229,10 +202,10 @@ if __name__ == '__main__':
     ModifiedFiles = Request.GetModifiedFiles(Request.EventHead['sha'], Request.EventCommits)
 
     # Determine the set of users and teams that are CODEOWNERS of the files modified by the PR
-    UserCodeOwners, TeamCodeOwners = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, Request.ParseCodeownersFile(Request.EventBase['ref']), 'CODEOWNERS')
+    UserCodeOwners, TeamCodeOwners = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, Request.ParseCodeownersFile(), 'CODEOWNERS')
 
     # Determine the set of users and teams that are REVIEWERS of the files modified by the PR
-    UserReviewers, TeamReviewers   = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, Request.ParseReviewersFile(Request.EventBase['ref']), 'REVIEWERS')
+    UserReviewers, TeamReviewers   = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, Request.ParseReviewersFile(), 'REVIEWERS')
 
     # Add PR Author to set of PR assignees if Author is not already an assignee
     Author = Request.EventPullRequest['user']['login']
