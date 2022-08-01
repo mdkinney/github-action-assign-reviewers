@@ -22,6 +22,13 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Env
+      run: export
+      shell: bash
+    - name: Set Env
+      run: echo "PIP_REQUIREMENTS_FILE=${{github.action_path}}/pip_requirements.txt" >> $GITHUB_ENV
+      shell: bash
+
     - name: Install Python
       uses: actions/setup-python@v4
       with:
@@ -31,7 +38,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles(format('{0}/pip-requirements.txt', github.action_path)) }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles(env.pip_requirements_file) }}-2
     - name: Install Python Dependencies
       if: steps.cache-python-dependencies.outputs.cache-hit != 'true'
       run: pip install -r ${{ github.action_path }}/pip-requirements.txt
