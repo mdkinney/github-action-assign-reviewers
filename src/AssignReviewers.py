@@ -234,11 +234,36 @@ if __name__ == '__main__':
     # Remove extra users and teams that are already assigned to the PR as a reviewer
     # but are not required based on the set of files modified.
     # Remove users and teams that are CODEOWNERS.  GitHub removes CODEOWNERS.
-    #
-    # NOTE: If extra reviewers are manually added to a PR that are not required based
-    #       on the files modified by the PR, then these extra reviewers will be removed.
     RemoveUserReviewers = (CurrentUserReviewers - UserReviewers) - UserCodeOwners
     RemoveTeamReviewers = (CurrentTeamReviewers - TeamReviewers) - TeamCodeOwners
+    if RemoveUserReviewers or RemoveTeamReviewers:
+        # If any users or teams are being removed, then make sure they were not
+        # manually requested by a user. Never remove users or teams that have
+        # been manually requested.
+        #
+        # NOTE: This uses GitHub APIs to collect the issue events
+        ManualReviewers = {}
+        IssueEvents = Request.HubPullRequest.get_issue_events()
+        for Event in IssueEvents:
+            # Skip events that are not related to review requests
+            if Event.event not in ['review_requested', 'review_request_removed']:
+                continue
+            # Skip events where the review requestor is a bot
+            if not Event.review_requester.name and '[bot]' in Event.review_requester.login:
+                continue
+            # Accumulate the count of requests added/removed for each login
+            if Event.requested_reviewer.login not in ManualReviewers:
+                ManualReviewers[Event.requested_reviewer.login] = 0
+            if Event.event == 'review_requested':
+                ManualReviewers[Event.requested_reviewer.login] += 1
+            else:
+                ManualReviewers[Event.requested_reviewer.login] -= 1
+        # Determine the set of logins with more manual requests than removals
+        Keep = set([x for x in ManualReviewers if ManualReviewers[x] > 0])
+        # Remove the set of logins with more manual requests than removals from
+        # the set of user and team reviewers to be removed from the PR.
+        RemoveUserReviewers -= Keep
+        RemoveTeamReviewers -= Keep
 
     # If any users or teams need to be added to the set of PR reviewers, then use GitHub API to add them
     if AddUserReviewers or AddTeamReviewers:
