@@ -260,6 +260,7 @@ if __name__ == '__main__':
                 ManualReviewers[Event.requested_reviewer.login] -= 1
         # Determine the set of logins with more manual requests than removals
         Keep = set([x for x in ManualReviewers if ManualReviewers[x] > 0])
+        print (f"Keep Reviewers: {Keep}")
         # Remove the set of logins with more manual requests than removals from
         # the set of user and team reviewers to be removed from the PR.
         RemoveUserReviewers -= Keep
