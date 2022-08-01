@@ -28,7 +28,9 @@ runs:
     - name: Set Env
       run: echo "PIP_REQUIREMENTS_FILE=${{github.action_path}}/pip_requirements.txt" >> $GITHUB_ENV
       shell: bash
-
+    - name: Env
+      run: export
+      shell: bash
     - name: Install Python
       uses: actions/setup-python@v4
       with:
