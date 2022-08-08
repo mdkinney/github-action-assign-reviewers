@@ -40,7 +40,7 @@ runs:
       run: pip install -r ${{ github.action_path }}/pip-requirements.txt
       shell: bash
     - name: Assign Reviewers from REVIEWERS file
-      run: python ${{ github.action_path }}/src/AssignReviewers.py
+      run: python -u ${{ github.action_path }}/src/AssignReviewers.py
       env:
         INPUT_TOKEN: ${{ inputs.token }}
         INPUT_REVIEWERS_PATH: ${{ inputs.reviewers_path }}
