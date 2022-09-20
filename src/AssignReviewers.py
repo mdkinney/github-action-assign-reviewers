@@ -19,6 +19,7 @@ from   github          import Github
 class AssignReviewers (object):
     def __init__ (self):
         self._Hub                = None
+        self._HubRepo            = None
         self._HubPullRequest     = None
         self._EventContext       = None
         self._EmailToLogin       = {}
@@ -39,6 +40,7 @@ class AssignReviewers (object):
             self._EventContext = json.load(open(self._EventPath))
         except:
             sys.exit(f"ERROR: Unable to parse JSON file GITHUB_EVENT_PATH:{self._EventPath}")
+        print(json.dumps(self._EventContext, indent=2))
 
         # Verify that all the JSON fields required to complete this action are present
         for Key in ['action', 'repository', 'pull_request']:
@@ -98,11 +100,21 @@ class AssignReviewers (object):
         return self._Hub
 
     @cached_property
+    def HubRepo(self):
+        # Use GitHub API to retrieve the repo object
+        print(f"Get HubRepo object for PR #{self.EventPullRequest['number']}")
+        try:
+            self._HubRepo = self.Hub.get_repo(self.EventRepository['full_name'])
+        except:
+            sys.exit(f"ERROR: Unable to retrieve Repo object")
+        return self._HubRepo
+
+    @cached_property
     def HubPullRequest(self):
         # Use GitHub API to retrieve the pull request object
         print(f"Get HubPullRequest object for PR #{self.EventPullRequest['number']}")
         try:
-            self._HubPullRequest = self.Hub.get_repo(self.EventRepository['full_name']).get_pull(self.EventPullRequest['number'])
+            self._HubPullRequest = self.HubRepo.get_pull(self.EventPullRequest['number'])
         except:
             sys.exit(f"ERROR: Unable to retrieve PullRequest object")
         return self._HubPullRequest
@@ -120,9 +132,17 @@ class AssignReviewers (object):
         except:
             sys.exit(f"ERROR: Unable to determine files modified in range {sha}~{commits}..{sha}")
 
+    def GetFileList(self, sha):
+        # Use git ls-tree to retrieve the set of files in the repo at a specified sha
+        print(f"Get all filenames in repo at {sha}")
+        try:
+            return self.Repo.execute(['git','ls-tree','-r','--name-only',sha]).split()
+        except:
+            sys.exit(f"ERROR: Unable to get all filenames in repo at {sha}")
+
     def _CodeOwnerPaths (self, BaseName, Override = ''):
         # Build prioritized list of file paths to search for a file with CODEOWNERS syntax
-        return [Override, f'./{BaseName}', f'./docs/{BaseName}', f'./.github/{BaseName}']
+        return [Override, f'{BaseName}', f'docs/{BaseName}', f'.github/{BaseName}']
 
     def _ParseCodeOwners (self, paths):
         # Search prioritized list of paths for a CODEOWNERS syntax file and parse the first file found
@@ -132,11 +152,11 @@ class AssignReviewers (object):
                 try:
                     Result = CodeOwners(open(file).read())
                     print(f"Found file {file}")
-                    return Result
+                    return file, Result
                 except:
                     continue
         # No files found in the prioritized list
-        return None
+        return None, None
 
     def ParseCodeownersFile (self):
         # Parse first CODEOWNERS file found in prioritized list
@@ -202,10 +222,61 @@ if __name__ == '__main__':
     ModifiedFiles = Request.GetModifiedFiles(Request.EventHead['sha'], Request.EventCommits)
 
     # Determine the set of users and teams that are CODEOWNERS of the files modified by the PR
-    UserCodeOwners, TeamCodeOwners = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, Request.ParseCodeownersFile(), 'CODEOWNERS')
+    CodeownersFile, CodeownersData = Request.ParseCodeownersFile()
+    UserCodeOwners, TeamCodeOwners = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, CodeownersData, 'CODEOWNERS')
 
     # Determine the set of users and teams that are REVIEWERS of the files modified by the PR
-    UserReviewers, TeamReviewers   = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, Request.ParseReviewersFile(), 'REVIEWERS')
+    ReviewersFile, ReviewersData = Request.ParseReviewersFile()
+    UserReviewers, TeamReviewers = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, ReviewersData, 'REVIEWERS')
+
+    # Add reviewers that are involved in changes to CODEOWNERS and/or REVIEWERS assignments in the PR
+    print (ModifiedFiles, CodeownersFile, ReviewersFile)
+    if CodeownersFile in ModifiedFiles or ReviewersFile in ModifiedFiles:
+        CurrentCodeownersData = None
+        CurrentReviewersData  = None
+        try:
+            if CodeownersFile in ModifiedFiles:
+                CurrentCodeownersData = CodeOwners(Request.Repo.show(f"{Request.EventHead['sha']}~{Request.EventCommits}:{CodeownersFile}"))
+        except:
+            pass
+        try:
+            if ReviewersFile in ModifiedFiles:
+                CurrentReviewersData = CodeOwners(Request.Repo.show(f"{Request.EventHead['sha']}~{Request.EventCommits}:{ReviewersFile}"))
+        except:
+            pass
+        # Get list of all files in repo beore and after PR
+        CurrentFileList = Request.GetFileList(f"{Request.EventHead['sha']}~{Request.EventCommits}")
+        FileList        = Request.GetFileList(f"{Request.EventHead['sha']}")
+        ChangedOwners = set()
+        for File in set(CurrentFileList) | set(FileList):
+            # Get set of all CODEOWNERS and REVIEWERS of a file before PR
+            CurrentOwners = set()
+            if CurrentCodeownersData:
+                CurrentOwners |= set(CurrentCodeownersData.of(File))
+            if CurrentReviewersData:
+                CurrentOwners |= set(CurrentReviewersData.of(File))
+            # Get set of all CODEOWNERS and REVIEWERS of a file after PR
+            Owners = set()
+            if CurrentCodeownersData:
+                Owners |= set(CodeownersData.of(File))
+            if CurrentReviewersData:
+                Owners |= set(ReviewersData.of(File))
+            # If CODEOWNERS or REVIEWERS of a file are being added/removed,
+            # then inform all CODEOWNERS and REVIEWERS of that file of the change
+            # Use symmetric difference to detect add/remove
+            if CurrentOwners ^ Owners:
+                ChangedOwners |= (CurrentOwners | Owners)
+                print (f"Owner change in {File}.  Current={CurrentOwners}  New={Owners}")
+        if ChangedOwners:
+            print (f"ChangedOwners in PR = {ChangedOwners}")
+            # Convert the users and teams into sets of GitHub IDs
+            for Item in ChangedOwners:
+                if Item[0] == 'USERNAME':
+                    UserReviewers.add (Item[1][1:])
+                elif Item[0] == 'TEAM':
+                    TeamReviewers.add (Item[1][1:])
+                elif Item[0] == 'EMAIL':
+                    UserReviewers.add (self._LookupEmail (Item[1]))
 
     # Add PR Author to set of PR assignees if Author is not already an assignee
     Author = Request.EventPullRequest['user']['login']
@@ -269,10 +340,16 @@ if __name__ == '__main__':
     # If any users or teams need to be added to the set of PR reviewers, then use GitHub API to add them
     if AddUserReviewers or AddTeamReviewers:
         print (f"Add Reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
-        try:
-            Request.HubPullRequest.create_review_request(list(AddUserReviewers), list(AddTeamReviewers))
-        except:
-            sys.exit(f"ERROR: Unable to add reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
+        # Do not attempt to add any reviewers that are not already collaborators
+        Collaborators = set([x.login for x in Request.HubRepo.get_collaborators()])
+        AddUserReviewers &= Collaborators
+        AddTeamReviewers &= Collaborators
+        if AddUserReviewers or AddTeamReviewers:
+            print (f"Add Reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
+            try:
+                Request.HubPullRequest.create_review_request(list(AddUserReviewers), list(AddTeamReviewers))
+            except:
+                sys.exit(f"ERROR: Unable to add reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
 
     # If any users or teams need to be removed from the set of PR reviewers, then use GitHub API to remove them
     if RemoveUserReviewers or RemoveTeamReviewers:
