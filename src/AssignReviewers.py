@@ -339,8 +339,6 @@ if __name__ == '__main__':
         RemoveUserReviewers -= Keep
         RemoveTeamReviewers -= Keep
 
-    C = [x.login for x in Github().get_repo('tianocore/edk2-codereview').get_collaborators()]
-    print (len(C), C)
     C = [x.login for x in Request.HubRepo.get_collaborators()]
     print (len(C), C)
 
