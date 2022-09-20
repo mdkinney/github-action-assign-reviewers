@@ -344,7 +344,7 @@ if __name__ == '__main__':
         print (f"Add Reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
         # Do not attempt to add any reviewers that are not already collaborators
         Collaborators = []
-        for Collaborator in Request.HubRepo.get_collaborators():
+        for Collaborator in Request.HubRepo.get_collaborators('all'):
             Collaborators.append (Collaborator.login)
         Collaborators = set(Collaborators)
         print (f"Collaborators: {Collaborators}")
