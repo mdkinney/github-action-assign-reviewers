@@ -339,6 +339,11 @@ if __name__ == '__main__':
         RemoveUserReviewers -= Keep
         RemoveTeamReviewers -= Keep
 
+    C = [x.login for x in Github().get_repo('tianocore/edk2-codereview').get_collaborators()]
+    print (len(C), C)
+    C = [x.login for x in Request.HubRepo.get_collaborators()]
+    print (len(C), C)
+
     # If any users or teams need to be added to the set of PR reviewers, then use GitHub API to add them
     if AddUserReviewers or AddTeamReviewers:
         print (f"Add Reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
