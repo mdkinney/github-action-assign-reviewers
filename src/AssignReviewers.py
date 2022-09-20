@@ -1,6 +1,8 @@
 ## @file
 # Assign reviewers from a REVIEWERS file using CODEOWNERS syntax
 #
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
 # Copyright (c) 2022, Intel Corporation. All rights reserved.<BR>
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 ##
@@ -230,7 +232,6 @@ if __name__ == '__main__':
     UserReviewers, TeamReviewers = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, ReviewersData, 'REVIEWERS')
 
     # Add reviewers that are involved in changes to CODEOWNERS and/or REVIEWERS assignments in the PR
-    print (ModifiedFiles, CodeownersFile, ReviewersFile)
     if CodeownersFile in ModifiedFiles or ReviewersFile in ModifiedFiles:
         CurrentCodeownersData = None
         CurrentReviewersData  = None
@@ -265,10 +266,11 @@ if __name__ == '__main__':
             # then inform all CODEOWNERS and REVIEWERS of that file of the change
             # Use symmetric difference to detect add/remove
             if CurrentOwners ^ Owners:
+                print (f"CODEOWNERS/REVIEWERS assignments modified for {File}: From:{CurrentOwners} To:{Owners}")
+                # Add all current a new owners to the requested set of reviewers
                 ChangedOwners |= (CurrentOwners | Owners)
-                print (f"Owner change in {File}.  Current={CurrentOwners}  New={Owners}")
         if ChangedOwners:
-            print (f"ChangedOwners in PR = {ChangedOwners}")
+            print (f"Review requests for CODEOWNERS/REVIEWERS assignment changes in PR: {ChangedOwners}")
             # Convert the users and teams into sets of GitHub IDs
             for Item in ChangedOwners:
                 if Item[0] == 'USERNAME':
@@ -339,7 +341,6 @@ if __name__ == '__main__':
 
     # If any users or teams need to be added to the set of PR reviewers, then use GitHub API to add them
     if AddUserReviewers or AddTeamReviewers:
-        print (f"Add Reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
         # Do not attempt to add any reviewers that are not already collaborators
         Collaborators = set([x.login for x in Request.HubRepo.get_collaborators()])
         AddUserReviewers &= Collaborators
