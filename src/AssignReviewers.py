@@ -341,8 +341,10 @@ if __name__ == '__main__':
 
     # If any users or teams need to be added to the set of PR reviewers, then use GitHub API to add them
     if AddUserReviewers or AddTeamReviewers:
+        print (f"Add Reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
         # Do not attempt to add any reviewers that are not already collaborators
         Collaborators = set([x.login for x in Request.HubRepo.get_collaborators()])
+        print (f"Collaborators: {Collaborators}")
         AddUserReviewers &= Collaborators
         AddTeamReviewers &= Collaborators
         if AddUserReviewers or AddTeamReviewers:
