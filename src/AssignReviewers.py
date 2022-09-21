@@ -252,23 +252,29 @@ if __name__ == '__main__':
         for File in set(CurrentFileList) | set(FileList):
             # Get set of all CODEOWNERS and REVIEWERS of a file before PR
             CurrentOwners = set()
+            CurrentReviewers = set()
             if CurrentCodeownersData:
                 CurrentOwners |= set(CurrentCodeownersData.of(File))
             if CurrentReviewersData:
-                CurrentOwners |= set(CurrentReviewersData.of(File))
+                CurrentReviewers |= set(CurrentReviewersData.of(File))
             # Get set of all CODEOWNERS and REVIEWERS of a file after PR
             Owners = set()
-            if CurrentCodeownersData:
+            Reviewers = set()
+            if CodeownersData:
                 Owners |= set(CodeownersData.of(File))
-            if CurrentReviewersData:
-                Owners |= set(ReviewersData.of(File))
+            if ReviewersData:
+                Reviewers |= set(ReviewersData.of(File))
             # If CODEOWNERS or REVIEWERS of a file are being added/removed,
             # then inform all CODEOWNERS and REVIEWERS of that file of the change
             # Use symmetric difference to detect add/remove
             if CurrentOwners ^ Owners:
-                print (f"CODEOWNERS/REVIEWERS assignments modified for {File}: From:{CurrentOwners} To:{Owners}")
-                # Add all current a new owners to the requested set of reviewers
-                ChangedOwners |= (CurrentOwners | Owners)
+                print (f"CODEOWNERS assignments modified for {File}: From:{CurrentOwners} To:{Owners}")
+                # Add all current and new owners to the requested set of reviewers
+                ChangedOwners |= (CurrentOwners | Owners | CurrentReviewers | Reviewers)
+            if CurrentReviewers ^ Reviewers:
+                print (f"REVIEWERS assignments modified for {File}: From:{CurrentReviewers} To:{Reviewers}")
+                # Add all current and new owners to the requested set of reviewers
+                ChangedOwners |= (CurrentOwners | Owners | CurrentReviewers | Reviewers)
         if ChangedOwners:
             print (f"Review requests for CODEOWNERS/REVIEWERS assignment changes in PR: {ChangedOwners}")
             # Convert the users and teams into sets of GitHub IDs
@@ -339,22 +345,16 @@ if __name__ == '__main__':
         RemoveUserReviewers -= Keep
         RemoveTeamReviewers -= Keep
 
-    C = [x.login for x in Request.HubRepo.get_collaborators()]
-    print (len(C), C)
-
     # If any users or teams need to be added to the set of PR reviewers, then use GitHub API to add them
     if AddUserReviewers or AddTeamReviewers:
         print (f"Add Reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
         # Do not attempt to add any reviewers that are not already collaborators
-        Collaborators = []
-        for Collaborator in Request.HubRepo.get_collaborators('all'):
-            Collaborators.append (Collaborator.login)
-        Collaborators = set(Collaborators)
-        print (f"Collaborators: {Collaborators}")
+        Collaborators = set([x.login for x in Request.HubRepo.get_collaborators()])
+        if AddUserReviewers - Collaborators or AddTeamReviewers - Collaborators:
+            print (f"WARNING: Some Reviewers are not Collaborators User: {AddUserReviewers - Collaborators} Team: {AddTeamReviewers - Collaborators}")
         AddUserReviewers &= Collaborators
         AddTeamReviewers &= Collaborators
         if AddUserReviewers or AddTeamReviewers:
-            print (f"Add Reviewers User: {AddUserReviewers} Team: {AddTeamReviewers}")
             try:
                 Request.HubPullRequest.create_review_request(list(AddUserReviewers), list(AddTeamReviewers))
             except:
