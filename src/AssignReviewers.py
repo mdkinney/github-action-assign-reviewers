@@ -152,8 +152,9 @@ class AssignReviewers (object):
             if file and os.path.exists(file):
                 print(f"Attempt to parse file {file}")
                 try:
-                    Result = CodeOwners(open(file).read())
-                    print(f"Found file {file}")
+                    FileContents = open(file).read()
+                    Result = CodeOwners(FileContents)
+                    print(f"Found file {file}:\n{FileContents}")
                     return file, Result
                 except:
                     continue
@@ -236,13 +237,15 @@ if __name__ == '__main__':
         CurrentCodeownersData = None
         CurrentReviewersData  = None
         try:
-            if CodeownersFile in ModifiedFiles:
-                CurrentCodeownersData = CodeOwners(Request.Repo.show(f"{Request.EventHead['sha']}~{Request.EventCommits}:{CodeownersFile}"))
+            CurrentCodeownersFileContents = Request.Repo.show(f"{Request.EventHead['sha']}~{Request.EventCommits}:{CodeownersFile}")
+            print (f"Current {CodeownersFile}:\n{CurrentCodeownersFileContents}")
+            CurrentCodeownersData = CodeOwners(CurrentCodeownersFileContents)
         except:
             pass
         try:
-            if ReviewersFile in ModifiedFiles:
-                CurrentReviewersData = CodeOwners(Request.Repo.show(f"{Request.EventHead['sha']}~{Request.EventCommits}:{ReviewersFile}"))
+            CurrentReviewersFileContents = Request.Repo.show(f"{Request.EventHead['sha']}~{Request.EventCommits}:{ReviewersFile}")
+            print (f"Current {ReviewersFile}:\n{CurrentReviewersFileContents}")
+            CurrentReviewersData = CodeOwners(CurrentReviewersFileContents)
         except:
             pass
         # Get list of all files in repo beore and after PR
