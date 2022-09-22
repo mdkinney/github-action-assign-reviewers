@@ -151,9 +151,8 @@ class AssignReviewers (object):
             if file and os.path.exists(file):
                 print(f"Attempt to parse file {file}")
                 try:
-                    FileContents = open(file).read()
-                    Result = CodeOwners(FileContents)
-                    print(f"Found file {file}:\n{FileContents}")
+                    Result = CodeOwners(open(file).read())
+                    print(f"Found file {file}")
                     return file, Result
                 except:
                     continue
