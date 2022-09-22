@@ -42,7 +42,6 @@ class AssignReviewers (object):
             self._EventContext = json.load(open(self._EventPath))
         except:
             sys.exit(f"ERROR: Unable to parse JSON file GITHUB_EVENT_PATH:{self._EventPath}")
-        print(json.dumps(self._EventContext, indent=2))
 
         # Verify that all the JSON fields required to complete this action are present
         for Key in ['action', 'repository', 'pull_request']:
@@ -237,15 +236,11 @@ if __name__ == '__main__':
         CodeownersData = None
         ReviewersData  = None
         try:
-            CodeownersFileContents = Request.Repo.show(f"{Request.EventHead['sha']}:{CodeownersFile}")
-            print (f"{CodeownersFile}:\n{CodeownersFileContents}")
-            CodeownersData = CodeOwners(CodeownersFileContents)
+            CodeownersData = CodeOwners(Request.Repo.show(f"{Request.EventHead['sha']}:{CodeownersFile}"))
         except:
             pass
         try:
-            ReviewersFileContents = Request.Repo.show(f"{Request.EventHead['sha']}:{ReviewersFile}")
-            print (f"{ReviewersFile}:\n{ReviewersFileContents}")
-            ReviewersData = CodeOwners(ReviewersFileContents)
+            ReviewersData = CodeOwners(Request.Repo.show(f"{Request.EventHead['sha']}:{ReviewersFile}"))
         except:
             pass
         # Get list of all files in repo beore and after PR
