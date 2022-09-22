@@ -225,27 +225,27 @@ if __name__ == '__main__':
     ModifiedFiles = Request.GetModifiedFiles(Request.EventHead['sha'], Request.EventCommits)
 
     # Determine the set of users and teams that are CODEOWNERS of the files modified by the PR
-    CodeownersFile, CodeownersData = Request.ParseCodeownersFile()
-    UserCodeOwners, TeamCodeOwners = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, CodeownersData, 'CODEOWNERS')
+    CodeownersFile, CurrentCodeownersData = Request.ParseCodeownersFile()
+    UserCodeOwners, TeamCodeOwners = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, CurrentCodeownersData, 'CODEOWNERS')
 
     # Determine the set of users and teams that are REVIEWERS of the files modified by the PR
-    ReviewersFile, ReviewersData = Request.ParseReviewersFile()
-    UserReviewers, TeamReviewers = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, ReviewersData, 'REVIEWERS')
+    ReviewersFile, CurrentReviewersData = Request.ParseReviewersFile()
+    UserReviewers, TeamReviewers = Request.GetCodeOwnerUsersAndTeams(ModifiedFiles, CurrentReviewersData, 'REVIEWERS')
 
     # Add reviewers that are involved in changes to CODEOWNERS and/or REVIEWERS assignments in the PR
     if CodeownersFile in ModifiedFiles or ReviewersFile in ModifiedFiles:
-        CurrentCodeownersData = None
-        CurrentReviewersData  = None
+        CodeownersData = None
+        ReviewersData  = None
         try:
-            CurrentCodeownersFileContents = Request.Repo.show(f"{Request.EventHead['sha']}~{Request.EventCommits}:{CodeownersFile}")
-            print (f"Current {CodeownersFile}:\n{CurrentCodeownersFileContents}")
-            CurrentCodeownersData = CodeOwners(CurrentCodeownersFileContents)
+            CodeownersFileContents = Request.Repo.show(f"{Request.EventHead['sha']}:{CodeownersFile}")
+            print (f"{CodeownersFile}:\n{CodeownersFileContents}")
+            CodeownersData = CodeOwners(CodeownersFileContents)
         except:
             pass
         try:
-            CurrentReviewersFileContents = Request.Repo.show(f"{Request.EventHead['sha']}~{Request.EventCommits}:{ReviewersFile}")
-            print (f"Current {ReviewersFile}:\n{CurrentReviewersFileContents}")
-            CurrentReviewersData = CodeOwners(CurrentReviewersFileContents)
+            ReviewersFileContents = Request.Repo.show(f"{Request.EventHead['sha']}:{ReviewersFile}")
+            print (f"{ReviewersFile}:\n{ReviewersFileContents}")
+            ReviewersData = CodeOwners(ReviewersFileContents)
         except:
             pass
         # Get list of all files in repo beore and after PR
